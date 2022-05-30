@@ -6,7 +6,7 @@ export default function Home() {
 	return(
 
 		<>
-			<Banner name="Jane" age={25}/>
+			<Banner />
 			<Highlights />
 		</>
 

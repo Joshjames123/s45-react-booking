@@ -1,9 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import Swal from 'sweetalert2';
+import UserContext from '../UserContext';
+import {Navigate, useNavigate} from 'react-router-dom';
 
 
 export default function Login() {
+
+	/*
+	Note for fetch()
+		-it is a moehtid in JS< which allows to send a request to an api and process its response.
+
+	fetch('url', {optional object})
+	-url form the API (http://localhost:4000/users/login) (https://heroku.com/users/login)
+	-{optional objects} objects which contains additional information about our requests such as methid, the body and the headers: content typem autorization.
+
+	//getting a response is usually a two-stage process
+	.then(response => response.json()) =====> parse the response as JSON
+	.then(actualData => console.log(actualData)) ======> process the result of the response
+	*/
+
+	const navigate = useNavigate();
+
+
+	//consume the user Context object and it's properties to use for user validation and to get the email coming from the login.
+	const {user, setUser} = useContext(UserContext);
 
 	const [ email, setEmail ] = useState('');
 	const [ password, setPassword ] = useState('');
@@ -22,23 +43,80 @@ export default function Login() {
 	function authentication(e) {
 		e.preventDefault();
 
-		//set the email of the authenticated user in the localStorage
-		//localStorage.serItem('propertyName', value)
-		//serItem to store information in localStorage
-		localStorage.setItem('email', email);
+		fetch('http://localhost:4000/users/login', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				email: email,
+				password: password
+			})
+		})
+		.then(response => response.json())
+		.then(data => {
+			console.log(data)
 
-		//clear inputs
-		setEmail('');
-		setPassword('');
+			if(data.accessToken !== undefined){
+				localStorage.setItem('accessToken', data.accessToken);
+				setUser({
+					accessToken: data.accessToken
+				})
 
-		Swal.fire({
-			title: 'Yay!',
-			icon: 'success',
-			text: `${email} has been verified! Welcome!`
+				Swal.fire({
+					title: 'Yay',
+					icon: 'success',
+					text: 'You are now login'
+				})
+
+				//get users details from our token
+				fetch('http://localhost:4000/users/details', {
+					headers: {
+						Authorization: `Bearer ${data.accessToken}`
+					}
+				})
+				.then(res => res.json())
+				.then(data => {
+					console.log(data)
+
+					if(data.isAdmin === true) {
+						localStorage.setItem('isAdmin', data.isAdmin)
+
+						setUser({
+							isAdmin: data.isAdmin
+						})
+
+						//push to the /courses
+						navigate('/courses')
+
+					} else {
+						//if not an admin, push to '/' (homepage)
+						navigate('/')
+					}
+
+
+				})
+
+
+			} else {
+				Swal.fire({
+					title: 'Oooopps',
+					icon: 'error',
+					text: 'Check email or password'
+				})
+
+			}
+			setEmail('')
+			setPassword('')
 		})
 	}
 
 	return(
+
+		(user.accessToken !== null) ?
+
+		<Navigate to="/courses" />
+
+		:
+
 		<Form onSubmit={e => authentication(e)}>
             <h1>Login</h1>
 			<Form.Group>

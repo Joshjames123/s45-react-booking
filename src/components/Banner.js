@@ -9,7 +9,7 @@ export default function Banner(props) {
 
 				<h1>Hello! {props.name} {props.age} </h1>
 
-				<h1 className="mb-3">Zuitt Coding Bootcamp</h1>
+				<h1 className="mb-3">JJBro</h1>
 				<h3 className="mb-3">Batch 176</h3>
 				<p className="mb-3">Opportunities for everyone, everywhere.</p>
 				<Button variant="primary">Enroll now!</Button>
